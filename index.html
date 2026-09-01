@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>A/L Physics AI Tutor</title>
+
+<style>
+:root{
+    --bg:#080c18;
+    --sidebar:#0e1425;
+    --card:#121a2d;
+    --card2:#19233a;
+    --text:#f4f6ff;
+    --muted:#9aa7c2;
+    --border:rgba(255,255,255,.08);
+    --accent:#6c63ff;
+    --accent2:#918aff;
+    --input:#0d1425;
+    --shadow:rgba(0,0,0,.25);
+}
+
+body.light{
+    --bg:#f5f7fc;
+    --sidebar:#ffffff;
+    --card:#ffffff;
+    --card2:#eef1f8;
+    --text:#182033;
+    --muted:#667085;
+    --border:rgba(20,30,60,.10);
+    --accent:#5b50e6;
+    --accent2:#7168ff;
+    --input:#f0f2f7;
+    --shadow:rgba(20,30,60,.08);
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    overflow:hidden;
+    transition:.3s;
+}
+
+button{
+    font:inherit;
+    border:0;
+    cursor:pointer;
+}
+
+.app{
+    display:flex;
+    height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:270px;
+    background:var(--sidebar);
+    border-right:1px solid var(--border);
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    transition:.3s;
+    z-index:100;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:35px;
+}
+
+.logo-icon{
+    width:44px;
+    height:44px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    color:white;
+    font-size:22px;
+    background:linear-gradient(135deg,#6c63ff,#9b94ff);
+}
+
+.logo h2{
+    font-size:17px;
+}
+
+.logo span{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.nav-title{
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin:8px 0 10px;
+}
+
+.nav-item{
+    padding:12px 13px;
+    border-radius:11px;
+    margin-bottom:5px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:var(--muted);
+    font-size:14px;
+    transition:.2s;
+}
+
+.nav-item:hover,
+.nav-item.active{
+    background:var(--card2);
+    color:var(--text);
+}
+
+.nav-item.active{
+    color:var(--accent2);
+}
+
+.sidebar-bottom{
+    margin-top:auto;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+}
+
+/* CONTROLS */
+
+.control-btn{
+    width:100%;
+    padding:12px;
+    background:var(--card2);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.language-switch{
+    display:flex;
+    background:var(--card2);
+    border-radius:11px;
+    padding:4px;
+    border:1px solid var(--border);
+}
+
+.lang-btn{
+    flex:1;
+    padding:8px;
+    border-radius:8px;
+    background:transparent;
+    color:var(--muted);
+    font-size:12px;
+}
+
+.lang-btn.active{
+    background:var(--accent);
+    color:white;
+}
+
+/* MAIN */
+
+.main{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+}
+
+.topbar{
+    height:70px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px;
+}
+
+.menu-btn{
+    display:none;
+    background:transparent;
+    color:var(--text);
+    font-size:24px;
+}
+
+.status{
+    color:var(--muted);
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.status-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#35d98a;
+    box-shadow:0 0 10px #35d98a;
+}
+
+/* CONTENT */
+
+.content{
+    flex:1;
+    overflow-y:auto;
+    padding:30px 25px 50px;
+}
+
+.hero{
+    max-width:850px;
+    margin:auto;
+    text-align:center;
+    padding:25px 10px;
+}
+
+.badge{
+    display:inline-block;
+    padding:7px 14px;
+    border-radius:30px;
+    background:rgba(108,99,255,.12);
+    color:var(--accent2);
+    font-size:12px;
+    margin-bottom:16px;
+}
+
+.hero h1{
+    font-size:clamp(32px,5vw,52px);
+    line-height:1.1;
+    margin-bottom:15px;
+}
+
+.gradient{
+    background:linear-gradient(90deg,#6c63ff,#aaa5ff);
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+.hero p{
+    color:var(--muted);
+    line-height:1.7;
+    max-width:650px;
+    margin:auto;
+}
+
+/* CHAT */
+
+.chat-container{
+    max-width:900px;
+    margin:20px auto;
+}
+
+.chat-box{
+    min-height:310px;
+    max-height:480px;
+    overflow-y:auto;
+    padding:18px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:0 15px 50px var(--shadow);
+}
+
+.message-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:15px;
+}
+
+.avatar{
+    min-width:42px;
+    height:42px;
+    border-radius:13px;
+    display:grid;
+    place-items:center;
+    color:white;
+    background:linear-gradient(135deg,#6c63ff,#938cff);
+}
+
+.user-avatar{
+    background:#34405c;
+}
+
+.message{
+    background:var(--card2);
+    padding:13px 15px;
+    border-radius:15px;
+    line-height:1.65;
+    font-size:14px;
+    max-width:80%;
+}
+
+.message small{
+    display:block;
+    color:var(--muted);
+    margin-bottom:5px;
+    font-size:11px;
+}
+
+/* INPUT */
+
+.chat-input{
+    margin-top:12px;
+    padding:9px;
+    display:flex;
+    gap:8px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:15px;
+}
+
+.chat-input input{
+    flex:1;
+    min-width:0;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:var(--text);
+    padding:11px;
+    font-size:14px;
+}
+
+.send-btn{
+    width:46px;
+    height:46px;
+    border-radius:12px;
+    background:var(--accent);
+    color:white;
+    font-size:18px;
+}
+
+.send-btn:hover{
+    background:var(--accent2);
+}
+
+/* QUICK */
+
+.quick,
+.units{
+    max-width:900px;
+    margin:25px auto;
+}
+
+.section-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:13px;
+}
+
+.section-heading h2,
+.section-heading h3{
+    font-size:18px;
+}
+
+.section-heading span{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.quick-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.quick-card{
+    text-align:left;
+    padding:17px;
+    border-radius:15px;
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--text);
+    transition:.2s;
+}
+
+.quick-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--accent);
+}
+
+.quick-card .icon{
+    font-size:23px;
+    margin-bottom:10px;
+}
+
+.quick-card strong{
+    display:block;
+    font-size:13px;
+    margin-bottom:5px;
+}
+
+.quick-card span{
+    color:var(--muted);
+    font-size:11px;
+}
+
+/* UNITS */
+
+.unit-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.unit{
+    background:var(--card);
+    border:1px solid var(--border);
+    padding:17px;
+    border-radius:15px;
+    transition:.2s;
+}
+
+.unit:hover{
+    transform:translateY(-3px);
+    border-color:var(--accent);
+}
+
+.unit-number{
+    color:var(--accent2);
+    font-size:10px;
+    letter-spacing:1px;
+    margin-bottom:8px;
+}
+
+.unit h3{
+    font-size:14px;
+    margin-bottom:6px;
+}
+
+.unit p{
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.5;
+}
+
+/* MOBILE */
+
+@media(max-width:850px){
+
+    .sidebar{
+        position:fixed;
+        top:0;
+        bottom:0;
+        left:-280px;
+    }
+
+    .sidebar.open{
+        left:0;
+        box-shadow:10px 0 40px rgba(0,0,0,.2);
+    }
+
+    .menu-btn{
+        display:block;
+    }
+
+    .topbar{
+        padding:0 17px;
+    }
+
+    .content{
+        padding:20px 14px 40px;
+    }
+
+    .quick-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .unit-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+}
+
+@media(max-width:500px){
+
+    .hero{
+        padding-top:15px;
+    }
+
+    .hero h1{
+        font-size:32px;
+    }
+
+    .hero p{
+        font-size:13px;
+    }
+
+    .quick-grid,
+    .unit-grid{
+        grid-template-columns:1fr;
+    }
+
+    .status{
+        display:none;
+    }
+
+    .message{
+        max-width:88%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="logo">
+        <div class="logo-icon">⚛</div>
+
+        <div>
+            <h2 data-i18n="logo">Physics AI</h2>
+            <span data-i18n="subtitle">A/L Tutor</span>
+        </div>
+    </div>
+
+    <div class="nav-title" data-i18n="learn">Learn</div>
+
+    <div class="nav-item active">
+        🏠 <span data-i18n="aiTutor">AI Tutor</span>
+    </div>
+
+    <div class="nav-item">
+        📚 <span data-i18n="units">Physics Units</span>
+    </div>
+
+    <div class="nav-item">
+        🧮 <span data-i18n="practice">Practice</span>
+    </div>
+
+    <div class="nav-item">
+        🎯 <span data-i18n="mcq">MCQ Practice</span>
+    </div>
+
+    <div class="nav-item">
+        🔬 <span data-i18n="practical">Practical</span>
+    </div>
+
+    <div class="nav-item">
+        📐 <span data-i18n="formulas">Formula Library</span>
+    </div>
+
+    <div class="sidebar-bottom">
+
+        <!-- LANGUAGE -->
+
+        <div class="language-switch">
+
+            <button
+                class="lang-btn active"
+                id="enBtn"
+                onclick="setLanguage('en')">
+                🇬🇧 English
+            </button>
+
+            <button
+                class="lang-btn"
+                id="siBtn"
+                onclick="setLanguage('si')">
+                🇱🇰 සිං
+            </button>
+
+        </div>
+
+        <!-- THEME -->
+
+        <button
+            class="control-btn"
+            onclick="toggleTheme()">
+
+            <span id="themeText">☀️ Light Mode</span>
+            <span>◐</span>
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+<header class="topbar">
+
+    <button
+        class="menu-btn"
+        onclick="toggleSidebar()">
+        ☰
+    </button>
+
+    <div></div>
+
+    <div class="status">
+        <span class="status-dot"></span>
+        <span data-i18n="ready">AI Tutor Ready</span>
+    </div>
+
+</header>
+
+
+<section class="content">
+
+<!-- HERO -->
+
+<div class="hero">
+
+    <div class="badge" data-i18n="badge">
+        ✨ A/L Physics Learning Platform
+    </div>
+
+    <h1>
+        <span data-i18n="learnPhysics">Learn Physics with</span>
+        <span class="gradient"> AI</span>
+    </h1>
+
+    <p data-i18n="heroText">
+        Your intelligent A/L Physics tutor.
+        Ask questions, understand concepts, solve problems
+        and prepare for exams with personalized guidance.
+    </p>
+
+</div>
+
+
+<!-- CHAT -->
+
+<div class="chat-container">
+
+    <div class="chat-box" id="chatBox">
+
+        <div class="message-row">
+
+            <div class="avatar">⚛</div>
+
+            <div class="message">
+
+                <small data-i18n="aiName">
+                    Physics AI Tutor
+                </small>
+
+                <span data-i18n="welcome">
+                    👋 Hello! I'm your A/L Physics AI Tutor.
+                    <br><br>
+                    Ask me anything about Physics and I'll
+                    help you understand it step by step.
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="chat-input">
+
+        <input
+            id="questionInput"
+            data-placeholder="placeholder"
+            placeholder="Ask a Physics question..."
+            onkeydown="handleEnter(event)"
+        >
+
+        <button
+            class="send-btn"
+            onclick="sendQuestion()">
+            ➤
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- QUICK START -->
+
+<div class="quick">
+
+    <div class="section-heading">
+
+        <h3 data-i18n="quickStart">
+            Quick Start
+        </h3>
+
+    </div>
+
+    <div class="quick-grid">
+
+        <button
+            class="quick-card"
+            onclick="setQuestion('Explain a Physics concept simply')">
+
+            <div class="icon">💡</div>
+
+            <strong data-i18n="explainConcept">
+                Explain Concept
+            </strong>
+
+            <span data-i18n="explainDesc">
+                Understand difficult concepts
+            </span>
+
+        </button>
+
+
+        <button
+            class="quick-card"
+            onclick="setQuestion('Help me solve a Physics problem')">
+
+            <div class="icon">🧮</div>
+
+            <strong data-i18n="solveProblems">
+                Solve Problems
+            </strong>
+
+            <span data-i18n="solveDesc">
+                Step-by-step solutions
+            </span>
+
+        </button>
+
+
+        <button
+            class="quick-card"
+            onclick="setQuestion('Give me an A/L Physics MCQ')">
+
+            <div class="icon">📝</div>
+
+            <strong data-i18n="practiceMCQ">
+                Practice MCQ
+            </strong>
+
+            <span data-i18n="mcqDesc">
+                Test your knowledge
+            </span>
+
+        </button>
+
+
+        <button
+            class="quick-card"
+            onclick="setQuestion('Give me a Physics formula')">
+
+            <div class="icon">📐</div>
+
+            <strong data-i18n="formulaHelp">
+                Formula Help
+            </strong>
+
+            <span data-i18n="formulaDesc">
+                Find useful formulas
+            </span>
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- UNITS -->
+
+<div class="units">
+
+    <div class="section-heading">
+
+        <h2 data-i18n="physicsUnits">
+            Physics Units
+        </h2>
+
+        <span data-i18n="curriculum">
+            A/L Curriculum
+        </span>
+
+    </div>
+
+
+    <div class="unit-grid">
+
+        <div class="unit">
+            <div class="unit-number">UNIT 01</div>
+            <h3 data-i18n="unit1">Measurement</h3>
+            <p data-i18n="unit1d">
+                Physical quantities and measurements
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 02</div>
+            <h3 data-i18n="unit2">Mechanics</h3>
+            <p data-i18n="unit2d">
+                Motion, forces and dynamics
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 03</div>
+            <h3 data-i18n="unit3">Oscillations & Waves</h3>
+            <p data-i18n="unit3d">
+                Periodic motion and wave phenomena
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 04</div>
+            <h3 data-i18n="unit4">Thermal Physics</h3>
+            <p data-i18n="unit4d">
+                Heat and thermodynamic concepts
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 05</div>
+            <h3 data-i18n="unit5">Gravitational Fields</h3>
+            <p data-i18n="unit5d">
+                Gravity and gravitational fields
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 06</div>
+            <h3 data-i18n="unit6">Electric Fields</h3>
+            <p data-i18n="unit6d">
+                Electric charge and fields
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 07</div>
+            <h3 data-i18n="unit7">Magnetic Fields</h3>
+            <p data-i18n="unit7d">
+                Magnetism and electromagnetic effects
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 08</div>
+            <h3 data-i18n="unit8">Current Electricity</h3>
+            <p data-i18n="unit8d">
+                Circuits and electrical quantities
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 09</div>
+            <h3 data-i18n="unit9">Electronics</h3>
+            <p data-i18n="unit9d">
+                Electronic devices and systems
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 10</div>
+            <h3 data-i18n="unit10">Modern Physics</h3>
+            <p data-i18n="unit10d">
+                Quantum and atomic concepts
+            </p>
+        </div>
+
+        <div class="unit">
+            <div class="unit-number">UNIT 11</div>
+            <h3 data-i18n="unit11">Nuclear Physics</h3>
+            <p data-i18n="unit11d">
+                Nuclear phenomena and applications
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<script>
+
+/* =========================
+   TRANSLATIONS
+========================= */
+
+const translations = {
+
+en: {
+
+logo:"Physics AI",
+subtitle:"A/L Tutor",
+learn:"Learn",
+aiTutor:"AI Tutor",
+units:"Physics Units",
+practice:"Practice",
+mcq:"MCQ Practice",
+practical:"Practical",
+formulas:"Formula Library",
+ready:"AI Tutor Ready",
+
+badge:"✨ A/L Physics Learning Platform",
+learnPhysics:"Learn Physics with",
+
+heroText:
+"Your intelligent A/L Physics tutor. Ask questions, understand concepts, solve problems and prepare for exams with personalized guidance.",
+
+aiName:"Physics AI Tutor",
+
+welcome:
+"👋 Hello! I'm your A/L Physics AI Tutor.<br><br>Ask me anything about Physics and I'll help you understand it step by step.",
+
+placeholder:"Ask a Physics question...",
+
+quickStart:"Quick Start",
+
+explainConcept:"Explain Concept",
+explainDesc:"Understand difficult concepts",
+
+solveProblems:"Solve Problems",
+solveDesc:"Step-by-step solutions",
+
+practiceMCQ:"Practice MCQ",
+mcqDesc:"Test your knowledge",
+
+formulaHelp:"Formula Help",
+formulaDesc:"Find useful formulas",
+
+physicsUnits:"Physics Units",
+curriculum:"A/L Curriculum",
+
+unit1:"Measurement",
+unit1d:"Physical quantities and measurements",
+
+unit2:"Mechanics",
+unit2d:"Motion, forces and dynamics",
+
+unit3:"Oscillations & Waves",
+unit3d:"Periodic motion and wave phenomena",
+
+unit4:"Thermal Physics",
+unit4d:"Heat and thermodynamic concepts",
+
+unit5:"Gravitational Fields",
+unit5d:"Gravity and gravitational fields",
+
+unit6:"Electric Fields",
+unit6d:"Electric charge and fields",
+
+unit7:"Magnetic Fields",
+unit7d:"Magnetism and electromagnetic effects",
+
+unit8:"Current Electricity",
+unit8d:"Circuits and electrical quantities",
+
+unit9:"Electronics",
+unit9d:"Electronic devices and systems",
+
+unit10:"Modern Physics",
+unit10d:"Quantum and atomic concepts",
+
+unit11:"Nuclear Physics",
+unit11d:"Nuclear phenomena and applications"
+
+},
+
+si: {
+
+logo:"Physics AI",
+subtitle:"A/L Tutor",
+learn:"ඉගෙන ගන්න",
+aiTutor:"AI ගුරුවරයා",
+units:"භෞතික විද්‍යා ඒකක",
+practice:"අභ්‍යාස",
+mcq:"MCQ අභ්‍යාස",
+practical:"ප්‍රායෝගික",
+formulas:"සූත්‍ර පුස්තකාලය",
+ready:"AI Tutor සූදානම්",
+
+badge:"✨ A/L භෞතික විද්‍යා ඉගෙනුම් වේදිකාව",
+learnPhysics:"AI සමඟ භෞතික විද්‍යාව ඉගෙන ගන්න",
+
+heroText:
+"ඔබගේ බුද්ධිමත් A/L භෞතික විද්‍යා AI ගුරුවරයා. ප්‍රශ්න අසන්න, සංකල්ප තේරුම් ගන්න, ගැටලු විසඳන්න සහ විභාග සඳහා සූදානම් වන්න.",
+
+aiName:"Physics AI Tutor",
+
+welcome:
+"👋 ආයුබෝවන්! මම ඔබගේ A/L Physics AI Tutor.<br><br>භෞතික විද්‍යාව සම්බන්ධ ඕනෑම ප්‍රශ්නයක් අසන්න. මම පියවරෙන් පියවර පැහැදිලි කර දෙන්නම්.",
+
+placeholder:"භෞතික විද්‍යා ප්‍රශ්නයක් අසන්න...",
+
+quickStart:"ඉක්මන් ආරම්භය",
+
+explainConcept:"සංකල්පයක් පැහැදිලි කරන්න",
+explainDesc:"අපහසු සංකල්ප තේරුම් ගන්න",
+
+solveProblems:"ගැටලු විසඳන්න",
+solveDesc:"පියවරෙන් පියවර විසඳුම්",
+
+practiceMCQ:"MCQ අභ්‍යාස",
+mcqDesc:"ඔබේ දැනුම පරීක්ෂා කරන්න",
+
+formulaHelp:"සූත්‍ර උදව්",
+formulaDesc:"අවශ්‍ය සූත්‍ර සොයා ගන්න",
+
+physicsUnits:"භෞතික විද්‍යා ඒකක",
+curriculum:"A/L විෂය මාලාව",
+
+unit1:"මිනුම්",
+unit1d:"භෞතික රාශි සහ මිනුම්",
+
+unit2:"යාන්ත්‍ර විද්‍යාව",
+unit2d:"චලිතය, බල සහ ගති විද්‍යාව",
+
+unit3:"දෝලන සහ තරංග",
+unit3d:"ආවර්තික චලිතය සහ තරංග සංසිද්ධි",
+
+unit4:"තාප භෞතික විද්‍යාව",
+unit4d:"තාපය සහ තාපගතික සංකල්ප",
+
+unit5:"ගුරුත්වාකර්ෂණ ක්ෂේත්‍ර",
+unit5d:"ගුරුත්වාකර්ෂණය සහ ගුරුත්වාකර්ෂණ ක්ෂේත්‍ර",
+
+unit6:"විද්‍යුත් ක්ෂේත්‍ර",
+unit6d:"විද්‍යුත් ආරෝපණ සහ ක්ෂේත්‍ර",
+
+unit7:"චුම්බක ක්ෂේත්‍ර",
+unit7d:"චුම්බකත්වය සහ විද්‍යුත් චුම්බක බලපෑම්",
+
+unit8:"ධාරා විද්‍යුතය",
+unit8d:"පරිපථ සහ විද්‍යුත් රාශි",
+
+unit9:"ඉලෙක්ට්‍රොනික විද්‍යාව",
+unit9d:"ඉලෙක්ට්‍රොනික උපාංග සහ පද්ධති",
+
+unit10:"නූතන භෞතික විද්‍යාව",
+unit10d:"ක්වොන්ටම් සහ පරමාණුක සංකල්ප",
+
+unit11:"න්‍යෂ්ටික භෞතික විද්‍යාව",
+unit11d:"න්‍යෂ්ටික සංසිද්ධි සහ යෙදීම්"
+
+}
+
+};
+
+
+/* =========================
+   LANGUAGE
+========================= */
+
+let currentLanguage =
+localStorage.getItem("physicsLanguage") || "en";
+
+
+function setLanguage(lang){
+
+    currentLanguage = lang;
+
+    localStorage.setItem(
+        "physicsLanguage",
+        lang
+    );
+
+    document.documentElement.lang =
+        lang === "si" ? "si" : "en";
+
+    document
+        .querySelectorAll("[data-i18n]")
+        .forEach(element => {
+
+            const key =
+                element.getAttribute("data-i18n");
+
+            if(translations[lang][key]){
+                element.innerHTML =
+                    translations[lang][key];
+            }
+
+        });
+
+
+    document
+        .querySelectorAll("[data-placeholder]")
+        .forEach(element => {
+
+            const key =
+                element.getAttribute("data-placeholder");
+
+            element.placeholder =
+                translations[lang][key];
+
+        });
+
+
+    document
+        .getElementById("enBtn")
+        .classList.toggle(
+            "active",
+            lang === "en"
+        );
+
+    document
+        .getElementById("siBtn")
+        .classList.toggle(
+            "active",
+            lang === "si"
+        );
+}
+
+
+/* =========================
+   THEME
+========================= */
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light");
+
+    const light =
+        document.body.classList.contains("light");
+
+    localStorage.setItem(
+        "physicsTheme",
+        light ? "light" : "dark"
+    );
+
+    updateThemeText();
+}
+
+
+function updateThemeText(){
+
+    const light =
+        document.body.classList.contains("light");
+
+    document.getElementById("themeText").innerText =
+        light
+        ? (currentLanguage === "si"
+            ? "🌙 Dark Mode"
+            : "🌙 Dark Mode")
+        : (currentLanguage === "si"
+            ? "☀️ Light Mode"
+            : "☀️ Light Mode");
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
+
+function toggleSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList.toggle("open");
+
+}
+
+
+/* =========================
+   QUESTION
+========================= */
+
+function setQuestion(text){
+
+    document
+        .getElementById("questionInput")
+        .value = text;
+
+    document
+        .getElementById("questionInput")
+        .focus();
+}
+
+
+function handleEnter(event){
+
+    if(event.key === "Enter"){
+        sendQuestion();
+    }
+
+}
+
+
+/* =========================
+   TEMPORARY CHAT
+========================= */
+
+function sendQuestion(){
+
+    const input =
+        document.getElementById("questionInput");
+
+    const question =
+        input.value.trim();
+
+    if(!question) return;
+
+    const chat =
+        document.getElementById("chatBox");
+
+
+    /* USER MESSAGE */
+
+    const userRow =
+        document.createElement("div");
+
+    userRow.className =
+        "message-row";
+
+    userRow.innerHTML = `
+        <div class="avatar user-avatar">👤</div>
+
+        <div class="message">
+
+            <small>
+                ${currentLanguage === "si"
+                    ? "ඔබ"
+                    : "You"}
+            </small>
+
+            ${escapeHTML(question)}
+
+        </div>
+    `;
+
+    chat.appendChild(userRow);
+
+
+    input.value = "";
+
+
+    /* TEMPORARY AI RESPONSE */
+
+    const aiRow =
+        document.createElement("div");
+
+    aiRow.className =
+        "message-row";
+
+    const response =
+        currentLanguage === "si"
+
+        ? "AI backend එක connect කළ පසු මම මේ ප්‍රශ්නයට සම්පූර්ණ Physics explanation එක ලබා දෙන්නම්."
+
+        : "Once the AI backend is connected, I will provide a complete Physics explanation for this question.";
+
+
+    aiRow.innerHTML = `
+        <div class="avatar">⚛</div>
+
+        <div class="message">
+
+            <small>
+                Physics AI Tutor
+            </small>
+
+            ${response}
+
+        </div>
+    `;
+
+    chat.appendChild(aiRow);
+
+    chat.scrollTop =
+        chat.scrollHeight;
+}
+
+
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHTML(text){
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+
+/* =========================
+   LOAD SETTINGS
+========================= */
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    const savedTheme =
+        localStorage.getItem("physicsTheme");
+
+    if(savedTheme === "light"){
+        document.body.classList.add("light");
+    }
+
+    setLanguage(currentLanguage);
+    updateThemeText();
+
+});
+
+</script>
+
+</body>
+</html>
