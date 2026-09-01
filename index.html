@@ -304,6 +304,7 @@ button{
     line-height:1.65;
     font-size:14px;
     max-width:80%;
+    word-wrap:break-word;
 }
 
 .message small{
@@ -311,6 +312,10 @@ button{
     color:var(--muted);
     margin-bottom:5px;
     font-size:11px;
+}
+
+.ai-loading{
+    opacity:.7;
 }
 
 /* INPUT */
@@ -343,10 +348,16 @@ button{
     background:var(--accent);
     color:white;
     font-size:18px;
+    transition:.2s;
 }
 
 .send-btn:hover{
     background:var(--accent2);
+}
+
+.send-btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
 }
 
 /* QUICK */
@@ -562,8 +573,6 @@ button{
 
     <div class="sidebar-bottom">
 
-        <!-- LANGUAGE -->
-
         <div class="language-switch">
 
             <button
@@ -581,8 +590,6 @@ button{
             </button>
 
         </div>
-
-        <!-- THEME -->
 
         <button
             class="control-btn"
@@ -680,11 +687,13 @@ button{
             id="questionInput"
             data-placeholder="placeholder"
             placeholder="Ask a Physics question..."
+            autocomplete="off"
             onkeydown="handleEnter(event)"
         >
 
         <button
             class="send-btn"
+            id="sendButton"
             onclick="sendQuestion()">
             ➤
         </button>
@@ -1126,6 +1135,8 @@ function setLanguage(lang){
             "active",
             lang === "si"
         );
+
+    updateThemeText();
 }
 
 
@@ -1156,12 +1167,16 @@ function updateThemeText(){
 
     document.getElementById("themeText").innerText =
         light
-        ? (currentLanguage === "si"
-            ? "🌙 Dark Mode"
-            : "🌙 Dark Mode")
-        : (currentLanguage === "si"
-            ? "☀️ Light Mode"
-            : "☀️ Light Mode");
+        ? "🌙 " + (
+            currentLanguage === "si"
+            ? "Dark Mode"
+            : "Dark Mode"
+        )
+        : "☀️ " + (
+            currentLanguage === "si"
+            ? "Light Mode"
+            : "Light Mode"
+        );
 }
 
 
@@ -1184,19 +1199,19 @@ function toggleSidebar(){
 
 function setQuestion(text){
 
-    document
-        .getElementById("questionInput")
-        .value = text;
+    const input =
+        document.getElementById("questionInput");
 
-    document
-        .getElementById("questionInput")
-        .focus();
+    input.value = text;
+
+    input.focus();
 }
 
 
 function handleEnter(event){
 
     if(event.key === "Enter"){
+        event.preventDefault();
         sendQuestion();
     }
 
@@ -1204,13 +1219,16 @@ function handleEnter(event){
 
 
 /* =========================
-   TEMPORARY CHAT
+   REAL AI CHAT
 ========================= */
 
-function sendQuestion(){
+async function sendQuestion(){
 
     const input =
         document.getElementById("questionInput");
+
+    const sendButton =
+        document.getElementById("sendButton");
 
     const question =
         input.value.trim();
@@ -1247,25 +1265,19 @@ function sendQuestion(){
 
     chat.appendChild(userRow);
 
-
     input.value = "";
 
+    chat.scrollTop =
+        chat.scrollHeight;
 
-    /* TEMPORARY AI RESPONSE */
+
+    /* AI LOADING */
 
     const aiRow =
         document.createElement("div");
 
     aiRow.className =
         "message-row";
-
-    const response =
-        currentLanguage === "si"
-
-        ? "AI backend එක connect කළ පසු මම මේ ප්‍රශ්නයට සම්පූර්ණ Physics explanation එක ලබා දෙන්නම්."
-
-        : "Once the AI backend is connected, I will provide a complete Physics explanation for this question.";
-
 
     aiRow.innerHTML = `
         <div class="avatar">⚛</div>
@@ -1276,7 +1288,13 @@ function sendQuestion(){
                 Physics AI Tutor
             </small>
 
-            ${response}
+            <span class="ai-loading">
+                ${
+                    currentLanguage === "si"
+                    ? "AI පිළිතුර සකස් කරමින්..."
+                    : "Thinking..."
+                }
+            </span>
 
         </div>
     `;
@@ -1285,6 +1303,155 @@ function sendQuestion(){
 
     chat.scrollTop =
         chat.scrollHeight;
+
+
+    /* DISABLE BUTTON */
+
+    sendButton.disabled = true;
+
+
+    try{
+
+        /*
+         * Cloudflare Pages Function
+         *
+         * functions/chat.js
+         * becomes:
+         * /chat
+         */
+
+        const response =
+            await fetch("/chat", {
+
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:JSON.stringify({
+                    message:question
+                })
+
+            });
+
+
+        let data;
+
+        try{
+            data =
+                await response.json();
+        }
+        catch{
+            throw new Error(
+                "Invalid server response"
+            );
+        }
+
+
+        if(!response.ok){
+
+            throw new Error(
+                data.error ||
+                "AI request failed"
+            );
+
+        }
+
+
+        if(!data.answer){
+
+            throw new Error(
+                "No answer received"
+            );
+
+        }
+
+
+        /* AI ANSWER */
+
+        aiRow.innerHTML = `
+            <div class="avatar">⚛</div>
+
+            <div class="message">
+
+                <small>
+                    Physics AI Tutor
+                </small>
+
+                <div>
+                    ${formatAIResponse(data.answer)}
+                </div>
+
+            </div>
+        `;
+
+
+    }
+    catch(error){
+
+        console.error(
+            "AI Error:",
+            error
+        );
+
+
+        aiRow.innerHTML = `
+            <div class="avatar">⚛</div>
+
+            <div class="message">
+
+                <small>
+                    Physics AI Tutor
+                </small>
+
+                <div>
+                    ${
+                        currentLanguage === "si"
+
+                        ? "❌ AI වෙත සම්බන්ධ වීමට නොහැකි වුණා. කරුණාකර නැවත උත්සාහ කරන්න."
+
+                        : "❌ Unable to connect to the AI. Please try again."
+                    }
+                </div>
+
+            </div>
+        `;
+
+    }
+    finally{
+
+        sendButton.disabled = false;
+
+        input.focus();
+
+        chat.scrollTop =
+            chat.scrollHeight;
+
+    }
+
+}
+
+
+/* =========================
+   FORMAT AI RESPONSE
+========================= */
+
+function formatAIResponse(text){
+
+    return escapeHTML(text)
+
+        .replace(
+            /\*\*(.*?)\*\*/g,
+            "<strong>$1</strong>"
+        )
+
+        .replace(
+            /\n/g,
+            "<br>"
+        );
+
 }
 
 
@@ -1297,7 +1464,8 @@ function escapeHTML(text){
     const div =
         document.createElement("div");
 
-    div.textContent = text;
+    div.textContent =
+        text;
 
     return div.innerHTML;
 }
@@ -1307,19 +1475,31 @@ function escapeHTML(text){
    LOAD SETTINGS
 ========================= */
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    const savedTheme =
-        localStorage.getItem("physicsTheme");
+        const savedTheme =
+            localStorage.getItem(
+                "physicsTheme"
+            );
 
-    if(savedTheme === "light"){
-        document.body.classList.add("light");
+        if(savedTheme === "light"){
+
+            document.body
+                .classList
+                .add("light");
+
+        }
+
+        setLanguage(
+            currentLanguage
+        );
+
+        updateThemeText();
+
     }
-
-    setLanguage(currentLanguage);
-    updateThemeText();
-
-});
+);
 
 </script>
 
